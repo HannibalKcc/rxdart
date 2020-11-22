@@ -220,7 +220,6 @@ class BehaviorSubject<T> extends Subject<T> implements ValueStream<T> {
 
   ValueStream<R> _forwardBehaviorSubject<R>(
       Stream<R> Function(Stream<T> s) transformerStream) {
-    ArgumentError.checkNotNull(transformerStream, 'transformerStream');
 
     late BehaviorSubject<R> subject;
     late StreamSubscription<R> subscription;
@@ -257,7 +256,6 @@ class _Wrapper<T> {
   void setValue(T event) {
     latestIsValue = true;
     latestIsError = false;
-
     latestValue = event;
 
     latestErrorAndStackTrace = null;
