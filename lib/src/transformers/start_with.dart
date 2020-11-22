@@ -4,7 +4,7 @@ import 'package:rxdart/src/utils/forwarding_sink.dart';
 import 'package:rxdart/src/utils/forwarding_stream.dart';
 
 class _StartWithStreamSink<S> implements ForwardingSink<S, S> {
-  final S _startValue;
+  final S? _startValue;
   var _isFirstEventAdded = false;
 
   _StartWithStreamSink(this._startValue);
@@ -48,7 +48,7 @@ class _StartWithStreamSink<S> implements ForwardingSink<S, S> {
   // this method is ran before any other events might be added.
   // Once the first event(s) is/are successfully added, this method
   // will not trigger again.
-  void _safeAddFirstEvent(EventSink<S> sink) {
+  void _safeAddFirstEvent(EventSink<S?> sink) {
     if (!_isFirstEventAdded) {
       sink.add(_startValue);
       _isFirstEventAdded = true;
@@ -65,7 +65,7 @@ class _StartWithStreamSink<S> implements ForwardingSink<S, S> {
 ///       .listen(print); // prints 1, 2
 class StartWithStreamTransformer<S> extends StreamTransformerBase<S, S> {
   /// The starting event of this [Stream]
-  final S startValue;
+  final S? startValue;
 
   /// Constructs a [StreamTransformer] which prepends the source [Stream]
   /// with [startValue].
@@ -84,6 +84,6 @@ extension StartWithExtension<T> on Stream<T> {
   /// ### Example
   ///
   ///     Stream.fromIterable([2]).startWith(1).listen(print); // prints 1, 2
-  Stream<T> startWith(T startValue) =>
+  Stream<T> startWith(T? startValue) =>
       transform(StartWithStreamTransformer<T>(startValue));
 }

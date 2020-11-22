@@ -4,7 +4,7 @@ import 'package:rxdart/src/utils/forwarding_sink.dart';
 import 'package:rxdart/src/utils/forwarding_stream.dart';
 
 class _StartWithManyStreamSink<S> implements ForwardingSink<S, S> {
-  final Iterable<S> _startValues;
+  final Iterable<S?> _startValues;
   var _isFirstEventAdded = false;
 
   _StartWithManyStreamSink(this._startValues);
@@ -48,7 +48,7 @@ class _StartWithManyStreamSink<S> implements ForwardingSink<S, S> {
   // this method is ran before any other events might be added.
   // Once the first event(s) is/are successfully added, this method
   // will not trigger again.
-  void _safeAddFirstEvent(EventSink<S> sink) {
+  void _safeAddFirstEvent(EventSink<S?> sink) {
     if (_isFirstEventAdded) return;
     _startValues.forEach(sink.add);
     _isFirstEventAdded = true;
@@ -64,7 +64,7 @@ class _StartWithManyStreamSink<S> implements ForwardingSink<S, S> {
 ///       .listen(print); // prints 1, 2, 3
 class StartWithManyStreamTransformer<S> extends StreamTransformerBase<S, S> {
   /// The starting events of this [Stream]
-  final Iterable<S> startValues;
+  final Iterable<S?> startValues;
 
   /// Constructs a [StreamTransformer] which prepends the source [Stream]
   /// with [startValues].
@@ -84,6 +84,6 @@ extension StartWithManyExtension<T> on Stream<T> {
   ///
   ///     Stream.fromIterable([3]).startWithMany([1, 2])
   ///       .listen(print); // prints 1, 2, 3
-  Stream<T> startWithMany(List<T> startValues) =>
+  Stream<T> startWithMany(List<T?> startValues) =>
       transform(StartWithManyStreamTransformer<T>(startValues));
 }

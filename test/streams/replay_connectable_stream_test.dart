@@ -1,5 +1,7 @@
 import 'dart:async';
 
+// ignore: import_of_legacy_library_into_null_safe
+import 'package:mockito/mockito.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:test/test.dart';
 
@@ -28,9 +30,16 @@ void main() {
       final stream = MockStream<int>(Stream.fromIterable(const [1, 2, 3]));
       final connectableStream = ReplayConnectableStream(stream);
 
-      expect(stream.listenCount, 0);
+      when(stream.listen(any, onError: anyNamed('onError')))
+          .thenReturn(Stream.fromIterable(const [1, 2, 3]).listen(null));
+
+      verifyNever(stream.listen(any,
+          onError: anyNamed('onError'), onDone: anyNamed('onDone')));
+
       connectableStream.connect();
-      expect(stream.listenCount, 1);
+
+      verify(stream.listen(any,
+          onError: anyNamed('onError'), onDone: anyNamed('onDone')));
     });
 
     test('should begin emitting items after connection', () {
@@ -148,6 +157,37 @@ void main() {
           .autoConnect(connection: (subscription) => subscription.cancel());
 
       expect(await stream.isEmpty, true);
+    });
+
+    test('refCount cancels source subscription when no listeners remain',
+        () async {
+      var isCanceled = false;
+
+      final controller =
+          StreamController<void>(onCancel: () => isCanceled = true);
+      final stream = controller.stream.shareReplay();
+
+      StreamSubscription subscription;
+      subscription = stream.listen(null);
+
+      await subscription.cancel();
+      expect(isCanceled, true);
+    });
+
+    test('can close shareReplay() stream', () async {
+      final isCanceled = Completer<void>();
+
+      final controller = StreamController<bool>();
+      controller.stream
+          .shareReplay()
+          .doOnCancel(() => isCanceled.complete())
+          .listen(null);
+
+      controller.add(true);
+      await Future<void>.delayed(Duration.zero);
+      await controller.close();
+
+      expect(isCanceled.future, completes);
     });
   });
 }

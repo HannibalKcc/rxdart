@@ -156,7 +156,7 @@ void main() {
       await expectLater(actual, [
         Notification.onData(1),
         Notification<int>.onError(exception, stacktrace),
-        Notification<int>.onDone()
+        Notification<int>.onDone(),
       ]);
     });
 
@@ -299,8 +299,10 @@ void main() {
               .listen(null)
                 ..cancel();
         },
-        expectAsync2((Object e, [StackTrace? s]) => expect(e, isException),
-            count: 2),
+        expectAsync2(
+          (Object e, StackTrace s) => expect(e, isException),
+          count: 2,
+        ),
       );
 
       Stream.value(1)

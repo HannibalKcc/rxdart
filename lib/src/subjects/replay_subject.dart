@@ -75,11 +75,16 @@ class ReplaySubject<T> extends Subject<T> implements ReplayStream<T> {
         () => queue.toList(growable: false).reversed.fold(controller.stream,
             (stream, event) {
           if (event.isError) {
-            return stream.transform(StartWithErrorStreamTransformer(
-                event.errorAndStackTrace!.error,
-                event.errorAndStackTrace!.stackTrace));
+            final errorAndStackTrace = event.errorAndStackTrace!;
+
+            return stream.transform(
+              StartWithErrorStreamTransformer(
+                errorAndStackTrace.error,
+                errorAndStackTrace.stackTrace,
+              ),
+            );
           } else {
-            return stream.transform(StartWithStreamTransformer(event.event!));
+            return stream.transform(StartWithStreamTransformer(event.data!));
           }
         }),
         reusable: true,
@@ -102,7 +107,7 @@ class ReplaySubject<T> extends Subject<T> implements ReplayStream<T> {
       _queue.removeFirst();
     }
 
-    _queue.add(_Event(false, event: event));
+    _queue.add(_Event.data(event));
   }
 
   @override
@@ -111,24 +116,19 @@ class ReplaySubject<T> extends Subject<T> implements ReplayStream<T> {
       _queue.removeFirst();
     }
 
-    _queue.add(
-      _Event<T>(
-        true,
-        errorAndStackTrace: ErrorAndStackTrace(error, stackTrace),
-      ),
-    );
+    _queue.add(_Event<T>.error(ErrorAndStackTrace(error, stackTrace)));
   }
 
   @override
   List<T> get values => _queue
       .where((event) => !event.isError)
-      .map((event) => event.event!)
+      .map((event) => event.data!)
       .toList(growable: false);
 
   @override
-  List<Object> get errors => _queue
+  List<ErrorAndStackTrace> get errorAndStackTraces => _queue
       .where((event) => event.isError)
-      .map((event) => event.errorAndStackTrace!.error)
+      .map((event) => event.errorAndStackTrace!)
       .toList(growable: false);
 
   @override
@@ -147,14 +147,13 @@ class ReplaySubject<T> extends Subject<T> implements ReplayStream<T> {
 
 class _Event<T> {
   final bool isError;
-  final T? event;
+  final T? data;
   final ErrorAndStackTrace? errorAndStackTrace;
 
-  _Event(this.isError, {this.event, this.errorAndStackTrace}) {
-    if (isError) {
-      ArgumentError.checkNotNull(errorAndStackTrace, 'errorAndStackTrace');
-    } else {
-      ArgumentError.checkNotNull(event, 'event');
-    }
-  }
+  _Event._({required this.isError, this.data, this.errorAndStackTrace});
+
+  factory _Event.data(T data) => _Event._(isError: false, data: data);
+
+  factory _Event.error(ErrorAndStackTrace e) =>
+      _Event._(isError: true, errorAndStackTrace: e);
 }

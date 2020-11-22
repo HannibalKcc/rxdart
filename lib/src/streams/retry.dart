@@ -40,11 +40,39 @@ class RetryStream<T> extends Stream<T> {
   RetryStream(this.streamFactory, [this.count]);
 
   @override
-  StreamSubscription<T> listen(void Function(T event)? onData,
-      {Function? onError, void Function()? onDone, bool? cancelOnError}) {
+  StreamSubscription<T> listen(
+    void Function(T event)? onData, {
+    Function? onError,
+    void Function()? onDone,
+    bool? cancelOnError,
+  }) {
+    late void Function([int]) retry;
+
+    final combinedErrors = () => RetryError.withCount(
+          count!,
+          _errors,
+        );
+
+    retry = ([dynamic? _]) {
+      _subscription = streamFactory().listen(_controller!.add,
+          onError: (Object e, StackTrace s) {
+        _subscription.cancel();
+
+        _errors.add(ErrorAndStackTrace(e, s));
+
+        if (count == _retryStep) {
+          _controller!
+            ..addError(combinedErrors())
+            ..close();
+        } else {
+          retry(++_retryStep);
+        }
+      }, onDone: _controller!.close, cancelOnError: false);
+    };
+
     _controller ??= StreamController<T>(
         sync: true,
-        onListen: _retry,
+        onListen: retry,
         onPause: () => _subscription.pause(),
         onResume: () => _subscription.resume(),
         onCancel: () => _subscription.cancel());
@@ -54,30 +82,6 @@ class RetryStream<T> extends Stream<T> {
       onError: onError,
       onDone: onDone,
       cancelOnError: cancelOnError,
-    );
-  }
-
-  void _retry() {
-    final controller = _controller!;
-
-    _subscription = streamFactory().listen(
-      controller.add,
-      onError: (Object e, StackTrace s) {
-        _subscription.cancel();
-
-        _errors.add(ErrorAndStackTrace(e, s));
-
-        if (count == _retryStep) {
-          controller
-            ..addError(RetryError.withCount(count!, _errors))
-            ..close();
-        } else {
-          ++_retryStep;
-          _retry();
-        }
-      },
-      onDone: controller.close,
-      cancelOnError: false,
     );
   }
 }

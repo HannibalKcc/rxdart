@@ -73,20 +73,16 @@ void main() {
 
   test('Rx.sequenceEqual.equals.errors', () async {
     final stream = Rx.sequenceEqual(
-      Stream<void>.error(ArgumentError('error A')),
-      Stream<void>.error(ArgumentError('error A')),
-      errorEquals: (e1, e2) => e1.error.toString() == e2.error.toString(),
-    );
+        Stream<void>.error(ArgumentError('error A')),
+        Stream<void>.error(ArgumentError('error A')));
 
     await expectLater(stream, emitsInOrder(<dynamic>[true, emitsDone]));
   });
 
   test('Rx.sequenceEqual.notEquals.errors', () async {
     final stream = Rx.sequenceEqual(
-      Stream<void>.error(ArgumentError('error A')),
-      Stream<void>.error(ArgumentError('error B')),
-      errorEquals: (e1, e2) => e1.error.toString() == e2.error.toString(),
-    );
+        Stream<void>.error(ArgumentError('error A')),
+        Stream<void>.error(ArgumentError('error B')));
 
     await expectLater(stream, emitsInOrder(<dynamic>[false, emitsDone]));
   });

@@ -7,13 +7,14 @@ script:
   - pub global activate coverage
   - dartfmt -n ./lib --set-exit-if-changed
   - dartanalyzer --enable-experiment=non-nullable --fatal-infos --fatal-warnings ./
-  - pub run --enable-experiment=non-nullable test test/rxdart_test.dart
+  - pub run --enable-experiment=non-nullable --no-sound-null-safety test test/rxdart_test.dart
   - dart
     --disable-service-auth-codes
     --enable-vm-service=8111
     --pause-isolates-on-exit
     --enable-asserts
     --enable-experiment=non-nullable
+    --no-sound-null-safety
     test/rxdart_test.dart &
   - nohup pub global run coverage:collect_coverage
     --port=8111

@@ -14,10 +14,9 @@ class _DematerializeStreamSink<S> implements EventSink<Notification<S>> {
     } else if (data.isOnDone) {
       _outputSink.close();
     } else if (data.isOnError) {
-      final errorAndStackTrace = data.errorAndStackTrace!;
       _outputSink.addError(
-        errorAndStackTrace.error,
-        errorAndStackTrace.stackTrace,
+        data.errorAndStackTrace!.error,
+        data.errorAndStackTrace!.stackTrace,
       );
     }
   }

@@ -1,5 +1,7 @@
 import 'package:rxdart/src/utils/error_and_stacktrace.dart';
 
+import 'package:rxdart/rxdart.dart';
+
 /// The type of event used in [Notification]
 enum Kind {
   /// Specifies an onData event
@@ -31,19 +33,27 @@ class Notification<T> {
   /// Constructs a [Notification] which, depending on the [kind], wraps either
   /// [value], or [errorAndStackTrace], or neither if it is just a
   /// [Kind.OnData] event.
-  const Notification(this.kind, this.value, this.errorAndStackTrace);
+  const Notification._(this.kind, this.value, this.errorAndStackTrace);
 
   /// Constructs a [Notification] with [Kind.OnData] and wraps a [value]
   factory Notification.onData(T value) =>
-      Notification<T>(Kind.OnData, value, null);
+      Notification<T>._(Kind.OnData, value, null);
 
   /// Constructs a [Notification] with [Kind.OnDone]
-  factory Notification.onDone() => const Notification(Kind.OnDone, null, null);
+  factory Notification.onDone() =>
+      const Notification._(Kind.OnDone, null, null);
 
   /// Constructs a [Notification] with [Kind.OnError] and wraps an [error] and [stackTrace]
   factory Notification.onError(Object error, StackTrace? stackTrace) =>
-      Notification<T>(
-          Kind.OnError, null, ErrorAndStackTrace(error, stackTrace));
+      Notification<T>._(
+        Kind.OnError,
+        null,
+        ErrorAndStackTrace(error, stackTrace),
+      );
+
+  @override
+  String toString() =>
+      'Notification{kind: $kind, value: $value, errorAndStackTrace: $errorAndStackTrace}';
 
   @override
   bool operator ==(Object other) =>
@@ -57,10 +67,6 @@ class Notification<T> {
   @override
   int get hashCode =>
       kind.hashCode ^ value.hashCode ^ errorAndStackTrace.hashCode;
-
-  @override
-  String toString() =>
-      'Notification{kind: $kind, value: $value, errorAndStackTrace: $errorAndStackTrace}';
 
   /// A test to determine if this [Notification] wraps an onData event
   bool get isOnData => kind == Kind.OnData;

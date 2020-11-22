@@ -112,13 +112,15 @@ class RetryWhenStream<T> extends Stream<T> {
         sub = retryWhenFactory(e, s).listen(
           (event) {
             sub.cancel();
+            _errors.add(ErrorAndStackTrace(e, s));
             _retry();
           },
           onError: (Object e, StackTrace? s) {
             sub.cancel();
-
             controller
-              ..addError(RetryError.onReviveFailed(_errors))
+              ..addError(RetryError.onReviveFailed(
+                _errors..add(ErrorAndStackTrace(e, s)),
+              ))
               ..close();
           },
         );
