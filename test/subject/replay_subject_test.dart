@@ -135,17 +135,22 @@ void main() {
       await expectLater(subject.values, const <int>[1, 2, 3]);
     });
 
-    test('synchronously get the previous errors', () async {
+    test('synchronously get the previous errors', () {
       final subject = ReplaySubject<int>();
       final e1 = Exception(), e2 = Exception(), e3 = Exception();
+      final stackTrace = StackTrace.fromString('#');
 
       subject.addError(e1);
-      subject.addError(e2);
+      subject.addError(e2, stackTrace);
       subject.addError(e3);
 
-      await expectLater(
-        subject.errorAndStackTraces.map((es) => es.error),
+      expect(
+        subject.errors,
         containsAllInOrder(<Exception>[e1, e2, e3]),
+      );
+      expect(
+        subject.stackTraces,
+        containsAllInOrder(<StackTrace?>[null, stackTrace, null]),
       );
     });
 
@@ -200,7 +205,7 @@ void main() {
       await expectLater(subject.stream, emitsInOrder(const <int>[1, 2, 3]));
     });
 
-    test('allows items to be added once addStream is completes with an error',
+    test('allows items to be added once addStream completes with an error',
         () async {
       final subject = ReplaySubject<int>();
 
@@ -406,7 +411,7 @@ void main() {
       mappedStream.listen(null,
           onDone: () => expect(mappedStream.value, equals(1)));
 
-      expect(mappedStream.value, equals(isNull));
+      expect(mappedStream.valueOrNull, isNull);
 
       await subject.close();
     });
@@ -420,7 +425,7 @@ void main() {
 
       subject.add(2);
 
-      expect(mappedStream.value, equals(isNull));
+      expect(mappedStream.valueOrNull, isNull);
 
       await subject.close();
     });
